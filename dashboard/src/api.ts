@@ -8,7 +8,9 @@ import {
   HealthResponse
 } from './types';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || window.location.port === '5173'
+  ? 'http://localhost:8000'  // Dev mode: direct API access
+  : '';  // Production/Docker: same origin via nginx proxy
 
 export const api = {
   async predict(request: PredictRequest): Promise<PredictResponse> {

@@ -83,7 +83,11 @@ export function ShapDrawer({ transaction, onClose }: ShapDrawerProps) {
                 Top 5 Contributing Features
               </h3>
               <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-                SHAP values show how much each feature contributed to the fraud prediction.
+                Each bar shows how much a feature pushed the prediction toward fraud
+                (red) or legitimate (green). Larger bars = stronger influence.
+              </p>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.375rem', opacity: 0.8 }}>
+                SHAP values comply with EU AI Act Art.13 explainability requirements.
               </p>
             </div>
 

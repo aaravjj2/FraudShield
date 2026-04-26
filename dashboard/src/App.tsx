@@ -5,20 +5,36 @@ import { PredictResponse } from './types';
 import './App.css';
 
 function App() {
-  const handlePredictionSubmit = (response: PredictResponse) => {
-    console.log('Prediction submitted:', response);
+  const handlePredictionSubmit = (_response: PredictResponse) => {
+    // Transaction feed auto-refreshes via polling
   };
 
   return (
     <div className="app-container">
-      <header style={{ padding: '1rem 2rem', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-secondary)' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={{ color: 'var(--accent-red)' }}>⚡</span>
-          FraudShield
-          <span style={{ fontSize: '0.875rem', fontWeight: 400, color: 'var(--text-muted)', marginLeft: 'auto' }}>
-            Real-Time AI Fraud Detection
-          </span>
-        </h1>
+      <header className="app-header">
+        <div className="header-left">
+          <div className="logo">
+            <span className="logo-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+            </span>
+            <div className="logo-text">
+              <h1 className="logo-title">FraudShield</h1>
+              <span className="logo-subtitle">AI-Powered Fraud Detection</span>
+            </div>
+          </div>
+        </div>
+        <div className="header-right">
+          <a
+            href="http://localhost:8000/docs"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="api-docs-link"
+          >
+            API Docs
+          </a>
+        </div>
       </header>
 
       <StatsBar />
@@ -31,10 +47,12 @@ function App() {
         <TestForm onSubmit={handlePredictionSubmit} />
       </main>
 
-      <footer style={{ padding: '1.5rem 2rem', borderTop: '1px solid var(--border-color)', background: 'var(--bg-secondary)', textAlign: 'center', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-        <p>FraudShield Dashboard — Real-Time Fraud Detection with SHAP Explainability</p>
-        <p style={{ marginTop: '0.5rem' }}>
-          API: <code style={{ background: 'var(--bg-primary)', padding: '0.25rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem' }}>http://localhost:8000/docs</code>
+      <footer className="app-footer">
+        <p>
+          FraudShield — Real-Time Fraud Detection with SHAP Explainability
+        </p>
+        <p className="footer-note">
+          Explainability complies with EU AI Act Art.13 &amp; SR 11-7 Model Validation requirements
         </p>
       </footer>
     </div>

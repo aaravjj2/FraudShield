@@ -43,7 +43,7 @@ export function TransactionFeed({ className = '' }: TransactionFeedProps) {
 
   if (loading) {
     return (
-      <div className={`transaction-feed-section ${className}`}>
+      <div className={`transaction-feed-section ${className}`} data-testid="transaction-feed">
         <div className="section-header">
           <h2 className="section-title">Transaction Feed</h2>
           <div className="live-indicator">
@@ -61,7 +61,7 @@ export function TransactionFeed({ className = '' }: TransactionFeedProps) {
 
   if (error) {
     return (
-      <div className={`transaction-feed-section ${className}`}>
+      <div className={`transaction-feed-section ${className}`} data-testid="transaction-feed">
         <div className="section-header">
           <h2 className="section-title">Transaction Feed</h2>
           <div className="live-indicator">
@@ -78,7 +78,7 @@ export function TransactionFeed({ className = '' }: TransactionFeedProps) {
 
   if (transactions.length === 0) {
     return (
-      <div className={`transaction-feed-section ${className}`}>
+      <div className={`transaction-feed-section ${className}`} data-testid="transaction-feed">
         <div className="section-header">
           <h2 className="section-title">Transaction Feed</h2>
           <div className="live-indicator">

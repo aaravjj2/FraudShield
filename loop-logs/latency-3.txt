@@ -1,0 +1,5 @@
+Docker /predict (30 calls):
+  Server-side: 315.62ms
+  Min:    89.1ms
+  Median: 235.8ms
+  P95:    400.1ms

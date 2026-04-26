@@ -7,6 +7,10 @@ COPY package*.json ./
 RUN npm ci
 
 COPY . .
+
+# In Docker, API is proxied via nginx (same origin)
+ENV VITE_API_URL=""
+
 RUN npm run build
 
 # Production stage
