@@ -1,0 +1,10 @@
+
+Running 5 tests using 1 worker
+
+  ✓  1 tests/dashboard/dashboard.spec.ts:3:5 › dashboard loads, no console errors (2.0s)
+  ✓  2 tests/dashboard/dashboard.spec.ts:12:5 › suspicious transaction → red fraud row (1.6s)
+  ✓  3 tests/dashboard/dashboard.spec.ts:22:5 › normal transaction → green row (1.4s)
+  ✓  4 tests/dashboard/dashboard.spec.ts:30:5 › fraud row click → SHAP drawer with 5 bars (1.4s)
+  ✓  5 tests/dashboard/dashboard.spec.ts:41:5 › stats bar visible (943ms)
+
+  5 passed (9.8s)
