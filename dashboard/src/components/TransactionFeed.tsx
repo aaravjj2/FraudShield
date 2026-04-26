@@ -14,6 +14,8 @@ export function TransactionFeed({ className = '' }: TransactionFeedProps) {
   const [error, setError] = useState<string | null>(null);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [, setLoadingShap] = useState(false);
+  const [searchAmount, setSearchAmount] = useState<string>('');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'fraud' | 'legit'>('all');
 
   const fetchTransactions = useCallback(async () => {
     try {
@@ -131,6 +133,22 @@ export function TransactionFeed({ className = '' }: TransactionFeedProps) {
     return `${(prob * 100).toFixed(1)}%`;
   };
 
+  // Filter transactions based on search amount and status
+  const filteredTransactions = transactions.filter((transaction) => {
+    // Filter by amount if search is provided
+    if (searchAmount !== '') {
+      const searchValue = parseFloat(searchAmount);
+      if (isNaN(searchValue)) return false;
+      if (transaction.amount !== searchValue) return false;
+    }
+
+    // Filter by status
+    if (filterStatus === 'fraud' && !transaction.is_fraud) return false;
+    if (filterStatus === 'legit' && transaction.is_fraud) return false;
+
+    return true;
+  });
+
   return (
     <>
       <div className={`transaction-feed-section ${className}`}>
@@ -139,6 +157,47 @@ export function TransactionFeed({ className = '' }: TransactionFeedProps) {
           <div className="live-indicator">
             <div className="live-dot"></div>
             Live
+          </div>
+        </div>
+
+        <div className="filter-bar">
+          <input
+            type="number"
+            className="search-input"
+            data-testid="search-input"
+            placeholder="Search by amount..."
+            value={searchAmount}
+            onChange={(e) => setSearchAmount(e.target.value)}
+            aria-label="Search transactions by amount"
+          />
+          <div className="filter-buttons">
+            <button
+              className={`filter-btn ${filterStatus === 'all' ? 'active' : ''}`}
+              data-testid="filter-all"
+              onClick={() => setFilterStatus('all')}
+              aria-label="Show all transactions"
+              aria-pressed={filterStatus === 'all'}
+            >
+              All
+            </button>
+            <button
+              className={`filter-btn ${filterStatus === 'fraud' ? 'active' : ''}`}
+              data-testid="filter-fraud"
+              onClick={() => setFilterStatus('fraud')}
+              aria-label="Show only fraud transactions"
+              aria-pressed={filterStatus === 'fraud'}
+            >
+              Fraud
+            </button>
+            <button
+              className={`filter-btn ${filterStatus === 'legit' ? 'active' : ''}`}
+              data-testid="filter-legit"
+              onClick={() => setFilterStatus('legit')}
+              aria-label="Show only legitimate transactions"
+              aria-pressed={filterStatus === 'legit'}
+            >
+              Legit
+            </button>
           </div>
         </div>
 
@@ -154,7 +213,7 @@ export function TransactionFeed({ className = '' }: TransactionFeedProps) {
               </tr>
             </thead>
             <tbody>
-              {transactions.map((transaction) => (
+              {filteredTransactions.map((transaction) => (
                 <tr
                   key={transaction.id}
                   className={transaction.is_fraud ? 'fraud-row' : 'legit-row'}
