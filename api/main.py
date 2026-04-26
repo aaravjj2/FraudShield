@@ -123,16 +123,16 @@ async def explain(tx_id: int):
     if len(features) != 28:
         raise HTTPException(status_code=400, detail="Transaction has no stored features")
 
-    start = time.perf_counter()
-    top_features = ml_explain(features, tx["amount"])
-    shap_ms = (time.perf_counter() - start) * 1000
+    result = ml_explain(features, tx["amount"])
 
     return ExplainResponse(
         transaction_id=tx_id,
         fraud_probability=tx["fraud_probability"],
         is_fraud=bool(tx["is_fraud"]),
-        top_features=[SHAPFeature(**f) for f in top_features],
-        latency_ms=round(shap_ms, 2),
+        base_value=result["base_value"],
+        base_probability=result["base_probability"],
+        top_features=[SHAPFeature(**f) for f in result["top_features"]],
+        latency_ms=result["latency_ms"],
     )
 
 
@@ -186,31 +186,44 @@ def json_to_shap(features_json: str) -> list[SHAPFeature]:
 async def simulate(
     count: int = Query(default=10, ge=1, le=50, description="Number of transactions"),
 ):
-    """Generate simulated transactions for live demo. Mix of fraud + legit."""
+    """Generate simulated transactions for live demo. Guarantees 2 fraud."""
     import numpy as np
     from ml.inference.predict import predict_fast
 
     rng = np.random.default_rng()
     results = []
 
-    for _ in range(count):
-        # 20% chance of fraud-like features using real fraud patterns
-        is_fraud_sim = rng.random() < 0.20
+    # Guarantee at least 2 fraud transactions (from real fraud samples)
+    fraud_count = min(2, count)
+    legit_count = count - fraud_count
 
-        if is_fraud_sim:
-            # Based on real fraud patterns from the dataset
-            features = rng.normal(0, 1.5, 28).tolist()
-            features[0] = rng.uniform(-4, -1)   # V1
-            features[3] = rng.uniform(2, 6)     # V4 — strong fraud indicator
-            features[9] = rng.uniform(-5, -2)   # V10
-            features[11] = rng.uniform(-4, -1)  # V12
-            features[13] = rng.uniform(-6, -3)  # V14 — strongest fraud indicator
-            amount = rng.uniform(50, 3000)
-        else:
-            # Normal: centered features, typical amounts
-            features = rng.normal(0, 1, 28).tolist()
-            amount = rng.uniform(1, 500)
+    fraud_samples = [
+        {"amount": 0.0, "features": [-2.31, 1.95, -1.61, 4.0, -0.52, -1.43, -2.54, 1.39, -2.77, -2.77, 3.2, -2.9, -0.6, -4.29, 0.39, -1.14, -2.83, -0.02, 0.42, 0.13, 0.52, -0.04, -0.47, 0.32, 0.04, 0.18, 0.26, -0.14]},
+        {"amount": 239.93, "features": [-2.26, -3.81, 2.99, 2.95, -0.21, 2.47, -1.47, 1.21, -1.22, -0.62, -0.48, -0.91, -0.53, 0.47, 0.71, 0.30, 0.68, 0.04, -0.13, -0.11, -0.15, 0.19, -0.07, 0.11, -0.05, 0.01, -0.01, 0.03]},
+    ]
 
+    for i in range(fraud_count):
+        sample = fraud_samples[i % len(fraud_samples)]
+        noisy_features = [f + rng.normal(0, 0.1) for f in sample["features"]]
+        result = predict_fast(noisy_features, sample["amount"])
+        tx_id = insert_transaction(
+            amount=round(sample["amount"], 2),
+            fraud_probability=result["fraud_probability"],
+            is_fraud=result["is_fraud"],
+            latency_ms=result["latency_ms"],
+            features=noisy_features,
+        )
+        results.append(PredictResponse(
+            fraud_probability=result["fraud_probability"],
+            is_fraud=result["is_fraud"],
+            top_features=[],
+            latency_ms=result["latency_ms"],
+            transaction_id=tx_id,
+        ))
+
+    for _ in range(legit_count):
+        features = rng.normal(0, 1, 28).tolist()
+        amount = rng.uniform(1, 500)
         result = predict_fast(features, amount)
         tx_id = insert_transaction(
             amount=round(amount, 2),
@@ -227,4 +240,6 @@ async def simulate(
             transaction_id=tx_id,
         ))
 
+    # Shuffle so fraud isn't always first
+    rng.shuffle(np.array(results))
     return results

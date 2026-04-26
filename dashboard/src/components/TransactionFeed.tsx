@@ -40,10 +40,12 @@ export function TransactionFeed({ className = '' }: TransactionFeedProps) {
     setSelectedTransaction(transaction);
     try {
       const explanation = await api.getExplanation(Number(transaction.id));
-      // Update the transaction with SHAP values
+      // Update the transaction with SHAP values and base values
       setSelectedTransaction({
         ...transaction,
         top_features: explanation.top_features,
+        base_value: explanation.base_value,
+        base_probability: explanation.base_probability,
       });
     } catch (err) {
       console.error('Error fetching SHAP explanation:', err);

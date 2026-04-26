@@ -9,6 +9,8 @@ export interface Transaction {
   }>;
   latency_ms: number;
   created_at: string;
+  base_value?: number;
+  base_probability?: number;
 }
 
 export interface PredictRequest {
@@ -54,6 +56,8 @@ export interface ExplainResponse {
   transaction_id: number;
   fraud_probability: number;
   is_fraud: boolean;
+  base_value: number;
+  base_probability: number;
   top_features: Array<{
     feature: string;
     shap_value: number;

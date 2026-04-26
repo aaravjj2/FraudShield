@@ -96,19 +96,34 @@ def predict_fast(features: list[float], amount: float) -> dict:
     }
 
 
-def explain(features: list[float], amount: float) -> list[dict]:
+def explain(features: list[float], amount: float) -> dict:
     """Compute SHAP explanation for a transaction (called on demand)."""
     _load_model()
+    start = time.perf_counter()
+
     feature_array = _build_features(features, amount)
     dm = DMatrix(feature_array)
     contributions = _booster.predict(dm, pred_contribs=True)[0]
     shap_vals = contributions[:-1]
+    base_value = float(contributions[-1])  # bias/expected value
 
     indices = np.argsort(np.abs(shap_vals))[::-1][:5]
-    return [
+    top_features = [
         {"feature": FEATURE_NAMES[i], "shap_value": round(float(shap_vals[i]), 6)}
         for i in indices
     ]
+
+    # Convert base value from log-odds to probability space
+    base_prob = float(1 / (1 + np.exp(-base_value)))
+
+    elapsed_ms = (time.perf_counter() - start) * 1000
+
+    return {
+        "base_value": round(base_value, 6),
+        "base_probability": round(base_prob, 6),
+        "top_features": top_features,
+        "latency_ms": round(elapsed_ms, 2),
+    }
 
 
 def predict_batch(transactions: list[dict]) -> list[dict]:

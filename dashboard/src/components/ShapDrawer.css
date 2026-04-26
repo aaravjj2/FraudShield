@@ -1,1 +1,273 @@
-/* ShapDrawer.css - Styles imported from App.css */
+/* ShapDrawer.css - Waterfall Chart Styles for SHAP Explanations */
+
+/* Waterfall Chart Container */
+.waterfall-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+/* SHAP Bar Styles */
+.shap-bar {
+  display: grid;
+  grid-template-columns: 80px 60px 1fr;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+}
+
+.shap-bar:last-child {
+  border-bottom: none;
+}
+
+/* Base Value Row */
+.shap-bar.base-row {
+  font-weight: 600;
+  background: var(--bg-secondary, #f9fafb);
+  padding: 0.75rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-color, #e5e7eb);
+}
+
+/* Final Prediction Row */
+.shap-bar.final-row {
+  font-weight: 600;
+  padding: 0.75rem 0.5rem;
+  border-radius: 6px;
+  border: 2px solid var(--accent-blue, #3b82f6);
+  background: var(--bg-secondary, #f9fafb);
+}
+
+/* Feature Label */
+.shap-bar-feature {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary, #111827);
+  font-family: 'Monaco', 'Menlo', monospace;
+}
+
+/* Value Display */
+.shap-bar-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: right;
+  font-family: 'Monaco', 'Menlo', monospace;
+}
+
+.shap-bar-value.base-value {
+  color: var(--text-muted, #6b7280);
+}
+
+.shap-bar-value.pushes-up {
+  color: var(--accent-red, #ef4444);
+}
+
+.shap-bar-value.pushes-down {
+  color: var(--accent-green, #10b981);
+}
+
+/* Visual Bar Container */
+.shap-bar-visual {
+  position: relative;
+  height: 24px;
+  background: var(--bg-tertiary, #f3f4f6);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* Visual Bar Fill */
+.shap-bar-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+  border-radius: 4px;
+}
+
+.shap-bar-fill.base-fill {
+  background: linear-gradient(90deg, var(--text-muted, #6b7280) 0%, #9ca3af 100%);
+}
+
+.shap-bar-fill.pushes-up {
+  background: linear-gradient(90deg, var(--accent-red, #ef4444) 0%, #f87171 100%);
+}
+
+.shap-bar-fill.pushes-down {
+  background: linear-gradient(90deg, var(--accent-green, #10b981) 0%, #34d399 100%);
+}
+
+/* Waterfall Explanation Text */
+.waterfall-explanation {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--bg-secondary, #f9fafb);
+  border-radius: 8px;
+  border-left: 4px solid var(--accent-blue, #3b82f6);
+}
+
+.waterfall-explanation p {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--text-primary, #111827);
+}
+
+.waterfall-explanation strong {
+  font-weight: 600;
+  color: var(--text-primary, #111827);
+}
+
+.waterfall-explanation .fraud-text {
+  color: var(--accent-red, #ef4444);
+  font-weight: 600;
+}
+
+.waterfall-explanation .legit-text {
+  color: var(--accent-green, #10b981);
+  font-weight: 600;
+}
+
+.waterfall-explanation .base-text {
+  color: var(--text-muted, #6b7280);
+  font-weight: 500;
+}
+
+.waterfall-explanation .increase-text {
+  color: var(--accent-red, #ef4444);
+  font-weight: 600;
+}
+
+.waterfall-explanation .decrease-text {
+  color: var(--accent-green, #10b981);
+  font-weight: 600;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 640px) {
+  .shap-bar {
+    grid-template-columns: 60px 50px 1fr;
+    gap: 0.5rem;
+  }
+
+  .shap-bar-feature {
+    font-size: 0.75rem;
+  }
+
+  .shap-bar-value {
+    font-size: 0.75rem;
+  }
+
+  .waterfall-explanation p {
+    font-size: 0.8125rem;
+  }
+}
+
+/* Transaction Details Section */
+.transaction-details {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color, #e5e7eb);
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-muted, #6b7280);
+}
+
+.detail-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary, #111827);
+  font-family: 'Monaco', 'Menlo', monospace;
+}
+
+/* Drawer Overlay */
+.shap-drawer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: flex-end;
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.shap-drawer-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Drawer Container */
+.shap-drawer {
+  width: 100%;
+  max-width: 480px;
+  background: var(--bg-primary, #ffffff);
+  height: 100%;
+  overflow-y: auto;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
+}
+
+.shap-drawer-overlay.open .shap-drawer {
+  transform: translateX(0);
+}
+
+/* Drawer Header */
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+  background: var(--bg-secondary, #f9fafb);
+}
+
+.drawer-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary, #111827);
+}
+
+.drawer-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  color: var(--text-muted, #6b7280);
+  transition: color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.drawer-close:hover {
+  color: var(--text-primary, #111827);
+}
+
+/* Drawer Content */
+.drawer-content {
+  padding: 1.5rem;
+}
+
+.shap-waterfall {
+  margin-bottom: 2rem;
+}

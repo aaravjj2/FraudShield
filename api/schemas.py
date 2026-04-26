@@ -71,5 +71,7 @@ class ExplainResponse(BaseModel):
     transaction_id: int
     fraud_probability: float
     is_fraud: bool
+    base_value: float
+    base_probability: float
     top_features: list[SHAPFeature]
     latency_ms: float
