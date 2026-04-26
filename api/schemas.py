@@ -75,3 +75,17 @@ class ExplainResponse(BaseModel):
     base_probability: float
     top_features: list[SHAPFeature]
     latency_ms: float
+
+
+class ModelInfoResponse(BaseModel):
+    model_type: str
+    n_estimators: int
+    max_depth: int
+    learning_rate: float
+    scale_pos_weight: float
+    decision_threshold: float
+    f1_fraud: float
+    auc_roc: float
+    training_samples: int
+    n_features: int
+    trained_at: str

@@ -21,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from api.schemas import (
     PredictRequest, PredictResponse, BatchRequest, BatchResponse,
     TransactionRecord, StatsResponse, HealthResponse, SHAPFeature,
-    ExplainResponse,
+    ExplainResponse, ModelInfoResponse,
 )
 from api.database import init_db, insert_transaction, get_transactions, get_transaction, get_stats
 from api.middleware import TimingMiddleware
@@ -183,6 +183,28 @@ def json_to_shap(features_json: str) -> list[SHAPFeature]:
     """Parse stored JSON features into SHAPFeature list."""
     items = json.loads(features_json)
     return [SHAPFeature(**f) for f in items]
+
+
+@app.get("/model-info", response_model=ModelInfoResponse)
+async def model_info():
+    """Get detailed model information and hyperparameters."""
+    from ml.inference.predict import get_model_metadata
+    meta = get_model_metadata()
+    metrics = meta.get("metrics", {})
+
+    return ModelInfoResponse(
+        model_type="XGBoost",
+        n_estimators=200,
+        max_depth=5,
+        learning_rate=0.1,
+        scale_pos_weight=577.3,
+        decision_threshold=metrics.get("threshold", 0.5),
+        f1_fraud=metrics.get("f1_fraud", 0.0),
+        auc_roc=metrics.get("auc_roc", 0.0),
+        training_samples=227845,
+        n_features=29,
+        trained_at=meta.get("trained_at", "unknown"),
+    )
 
 
 @app.post("/simulate", response_model=list[PredictResponse])
