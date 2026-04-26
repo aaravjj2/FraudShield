@@ -27,6 +27,7 @@ from api.schemas import (
 )
 from api.database import init_db, insert_transaction, get_transactions, get_transaction, get_stats
 from api.middleware import TimingMiddleware, RateLimitMiddleware
+from api.alerts import WebhookConfig, load_webhooks, save_webhooks
 from fastapi.responses import JSONResponse, StreamingResponse, Response
 
 # Lifespan: init DB on startup
@@ -299,6 +300,34 @@ async def metrics():
         f"fraudshield_model_threshold {model_metrics.get('threshold', 0.5):.4f}",
     ]
     return Response(content="\n".join(lines) + "\n", media_type="text/plain")
+
+
+# --- Webhook Configuration ---
+
+@app.get("/webhooks", response_model=list[WebhookConfig])
+async def list_webhooks():
+    """List configured webhook endpoints for fraud alerts."""
+    return load_webhooks()
+
+
+@app.post("/webhooks", response_model=WebhookConfig)
+async def add_webhook(config: WebhookConfig):
+    """Register a webhook URL for fraud alert notifications."""
+    webhooks = load_webhooks()
+    webhooks.append(config)
+    save_webhooks(webhooks)
+    return config
+
+
+@app.delete("/webhooks/{index}", response_model=dict)
+async def delete_webhook(index: int):
+    """Remove a webhook by index."""
+    webhooks = load_webhooks()
+    if index < 0 or index >= len(webhooks):
+        raise HTTPException(status_code=404, detail="Webhook not found")
+    removed = webhooks.pop(index)
+    save_webhooks(webhooks)
+    return {"deleted": removed.url}
 
 
 @app.post("/simulate", response_model=list[PredictResponse])

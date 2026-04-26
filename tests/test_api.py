@@ -157,3 +157,37 @@ def test_metrics():
     assert "fraudshield_model_f1" in r.text
     assert "# HELP" in r.text
     assert "# TYPE" in r.text
+
+
+def test_webhook_crud():
+    """Test webhook CRUD endpoints."""
+    # List (empty initially)
+    r = client.get("/webhooks")
+    assert r.status_code == 200
+    assert isinstance(r.json(), list)
+
+    # Add
+    r = client.post("/webhooks", json={
+        "url": "https://example.com/webhook",
+        "secret": "test-secret",
+        "enabled": True,
+        "min_probability": 0.7,
+    })
+    assert r.status_code == 200
+    assert r.json()["url"] == "https://example.com/webhook"
+
+    # List (1 webhook)
+    r = client.get("/webhooks")
+    assert len(r.json()) == 1
+
+    # Delete
+    r = client.delete("/webhooks/0")
+    assert r.status_code == 200
+
+    # List (empty again)
+    r = client.get("/webhooks")
+    assert len(r.json()) == 0
+
+    # Delete non-existent
+    r = client.delete("/webhooks/99")
+    assert r.status_code == 404
