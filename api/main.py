@@ -12,7 +12,7 @@ import time
 from pathlib import Path
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Query, HTTPException
+from fastapi import FastAPI, Query, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 # Ensure project root is in path
@@ -25,6 +25,7 @@ from api.schemas import (
 )
 from api.database import init_db, insert_transaction, get_transactions, get_transaction, get_stats
 from api.middleware import TimingMiddleware
+from fastapi.responses import JSONResponse
 
 # Lifespan: init DB on startup
 @asynccontextmanager
@@ -32,11 +33,29 @@ async def lifespan(app: FastAPI):
     init_db()
     yield
 
+
 app = FastAPI(
     title="FraudShield",
-    description="Real-Time AI Fraud Detection API — XGBoost + SHAP Explainability",
+    description="""# FraudShield API
+
+Real-Time AI Fraud Detection with SHAP Explainability.
+
+## Architecture
+- **ML**: XGBoost (200 trees, depth 5) trained on 284K transactions
+- **Explainability**: SHAP TreeExplainer (EU AI Act Art.13 compliant)
+- **Metrics**: F1=0.8526, AUC-ROC=0.9772
+
+## Quick Start
+```bash
+curl -X POST /predict \\
+  -H "Content-Type: application/json" \\
+  -d '{"amount": 100, "features": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}'
+```
+""",
     version="1.0.0",
     lifespan=lifespan,
+    contact={"name": "FraudShield", "url": "https://github.com/aaravjj2/FraudShield"},
+    license_info={"name": "MIT"},
 )
 
 app.add_middleware(TimingMiddleware)
@@ -48,6 +67,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Catch unhandled exceptions and return structured error response."""
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error", "error_type": type(exc).__name__},
+    )
 
 
 @app.get("/health", response_model=HealthResponse)
