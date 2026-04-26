@@ -144,3 +144,14 @@ def test_export_csv():
     assert len(lines) >= 2  # header + at least 1 row
     assert "id" in lines[0]
     assert "amount" in lines[0]
+
+
+def test_metrics():
+    """Test Prometheus metrics endpoint."""
+    r = client.get("/metrics")
+    assert r.status_code == 200
+    assert "fraudshield_transactions_total" in r.text
+    assert "fraudshield_fraud_detected_total" in r.text
+    assert "fraudshield_model_f1" in r.text
+    assert "# HELP" in r.text
+    assert "# TYPE" in r.text

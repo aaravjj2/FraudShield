@@ -27,7 +27,7 @@ from api.schemas import (
 )
 from api.database import init_db, insert_transaction, get_transactions, get_transaction, get_stats
 from api.middleware import TimingMiddleware, RateLimitMiddleware
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse, Response
 
 # Lifespan: init DB on startup
 @asynccontextmanager
@@ -258,6 +258,47 @@ async def export_transactions(
         media_type="text/csv; charset=utf-8",
         headers={"Content-Disposition": "attachment; filename=fraudshield_transactions.csv"},
     )
+
+
+@app.get("/metrics")
+async def metrics():
+    """Prometheus-compatible metrics endpoint for monitoring."""
+    from ml.inference.predict import get_model_metadata
+
+    db_stats = get_stats()
+    meta = get_model_metadata()
+    model_metrics = meta.get("metrics", {})
+
+    lines = [
+        "# HELP fraudshield_transactions_total Total transactions processed",
+        "# TYPE fraudshield_transactions_total counter",
+        f"fraudshield_transactions_total {db_stats['total_transactions']}",
+        "",
+        "# HELP fraudshield_fraud_detected_total Total fraud transactions detected",
+        "# TYPE fraudshield_fraud_detected_total counter",
+        f"fraudshield_fraud_detected_total {db_stats['total_fraud']}",
+        "",
+        "# HELP fraudshield_fraud_rate Current fraud rate",
+        "# TYPE fraudshield_fraud_rate gauge",
+        f"fraudshield_fraud_rate {db_stats['fraud_rate']:.6f}",
+        "",
+        "# HELP fraudshield_latency_avg_ms Average inference latency in ms",
+        "# TYPE fraudshield_latency_avg_ms gauge",
+        f"fraudshield_latency_avg_ms {db_stats['avg_latency_ms']:.2f}",
+        "",
+        "# HELP fraudshield_model_f1 Model F1 score on fraud class",
+        "# TYPE fraudshield_model_f1 gauge",
+        f"fraudshield_model_f1 {model_metrics.get('f1_fraud', 0.0):.4f}",
+        "",
+        "# HELP fraudshield_model_auc_roc Model AUC-ROC score",
+        "# TYPE fraudshield_model_auc_roc gauge",
+        f"fraudshield_model_auc_roc {model_metrics.get('auc_roc', 0.0):.4f}",
+        "",
+        "# HELP fraudshield_model_threshold Decision threshold",
+        "# TYPE fraudshield_model_threshold gauge",
+        f"fraudshield_model_threshold {model_metrics.get('threshold', 0.5):.4f}",
+    ]
+    return Response(content="\n".join(lines) + "\n", media_type="text/plain")
 
 
 @app.post("/simulate", response_model=list[PredictResponse])
