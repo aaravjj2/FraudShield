@@ -1,0 +1,6 @@
+Server latency: 195.7ms
+/predict (30 calls):
+  Min:    129.0ms
+  Median: 271.9ms
+  Mean:   257.9ms
+  P95:    324.7ms

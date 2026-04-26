@@ -1,0 +1,27 @@
+/home/aarav/miniconda3/lib/python3.13/site-packages/pytest_asyncio/plugin.py:208: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+The event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module", "package", "session"
+
+  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
+============================= test session starts ==============================
+platform linux -- Python 3.13.12, pytest-8.3.4, pluggy-1.5.0 -- /home/aarav/miniconda3/bin/python
+cachedir: .pytest_cache
+rootdir: /home/aarav/Aarav/Fraudshield
+plugins: cov-6.0.0, anyio-4.10.0, asyncio-0.24.0, mock-3.15.1
+asyncio: mode=Mode.STRICT, default_loop_scope=None
+collecting ... collected 13 items
+
+tests/test_api.py::test_health PASSED                                    [  7%]
+tests/test_api.py::test_predict_fraud PASSED                             [ 15%]
+tests/test_api.py::test_predict_legit PASSED                             [ 23%]
+tests/test_api.py::test_predict_validation PASSED                        [ 30%]
+tests/test_api.py::test_batch PASSED                                     [ 38%]
+tests/test_api.py::test_transactions PASSED                              [ 46%]
+tests/test_api.py::test_stats PASSED                                     [ 53%]
+tests/test_ml.py::test_model_exists PASSED                               [ 61%]
+tests/test_ml.py::test_model_structure PASSED                            [ 69%]
+tests/test_ml.py::test_model_predict_range PASSED                        [ 76%]
+tests/test_ml.py::test_fraud_detection PASSED                            [ 84%]
+tests/test_ml.py::test_suspicious_high_amount PASSED                     [ 92%]
+tests/test_ml.py::test_model_metrics PASSED                              [100%]
+
+============================= 13 passed in 15.63s ==============================

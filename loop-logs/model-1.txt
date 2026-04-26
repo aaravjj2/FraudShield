@@ -1,0 +1,3 @@
+Suspicious: 0.0000
+Avg inference: 0.03ms
+MODEL PASS
