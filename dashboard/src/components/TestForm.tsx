@@ -186,21 +186,41 @@ export function TestForm({ className = '', onSubmit }: TestFormProps) {
       )}
 
       {response && (
-        <div style={{ marginTop: '1rem', padding: '1rem', background: 'var(--bg-primary)', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-          <div style={{ marginBottom: '0.5rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-            Prediction Result
+        <div className="prediction-result" data-testid="prediction-result">
+          <div className="prediction-result-header">
+            <span className="prediction-result-title">Prediction Result</span>
+            <span className={`prediction-badge ${response.is_fraud ? 'fraud' : 'legit'}`}>
+              {response.is_fraud ? 'FRAUD' : 'LEGITIMATE'}
+            </span>
           </div>
-          <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-            <div style={{ marginBottom: '0.25rem' }}>
-              Fraud Probability: <span style={{ color: response.is_fraud ? 'var(--accent-red)' : 'var(--accent-green)', fontWeight: 600 }}>
+
+          <div className="risk-gauge" data-testid="risk-gauge">
+            <div className="risk-gauge-track">
+              <div
+                className="risk-gauge-fill"
+                style={{
+                  width: `${response.fraud_probability * 100}%`,
+                  background: response.fraud_probability > 0.7
+                    ? 'linear-gradient(90deg, #f59e0b, #ef4444)'
+                    : response.fraud_probability > 0.3
+                      ? 'linear-gradient(90deg, #10b981, #f59e0b)'
+                      : 'linear-gradient(90deg, #10b981, #34d399)',
+                }}
+              />
+            </div>
+            <div className="risk-gauge-labels">
+              <span>Low Risk</span>
+              <span className="risk-gauge-value">
                 {(response.fraud_probability * 100).toFixed(1)}%
               </span>
+              <span>High Risk</span>
             </div>
-            <div style={{ marginBottom: '0.25rem' }}>
-              Status: <span style={{ fontWeight: 600 }}>{response.is_fraud ? 'FRAUD' : 'LEGITIMATE'}</span>
-            </div>
-            <div>
-              Latency: <span style={{ fontWeight: 600 }}>{response.latency_ms.toFixed(2)}ms</span>
+          </div>
+
+          <div className="prediction-details">
+            <div className="prediction-detail-row">
+              <span className="detail-label">Latency</span>
+              <span className="detail-value">{response.latency_ms.toFixed(2)}ms</span>
             </div>
           </div>
         </div>
