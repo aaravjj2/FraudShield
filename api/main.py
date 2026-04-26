@@ -24,6 +24,7 @@ from api.schemas import (
     ExplainResponse,
 )
 from api.database import init_db, insert_transaction, get_transactions, get_transaction, get_stats
+from api.middleware import TimingMiddleware
 
 # Lifespan: init DB on startup
 @asynccontextmanager
@@ -37,6 +38,8 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+
+app.add_middleware(TimingMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
