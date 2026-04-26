@@ -822,3 +822,112 @@ code {
     padding: 1rem;
   }
 }
+
+/* Fraud Alert Toasts */
+.fraud-alert-container {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  pointer-events: none;
+}
+
+.fraud-alert-toast {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: linear-gradient(135deg, #991b1b 0%, #7f1d1d 100%);
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  border-left: 4px solid var(--accent-red);
+  border-radius: 8px;
+  padding: 0.875rem 1rem;
+  min-width: 320px;
+  max-width: 420px;
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.3), 0 4px 8px rgba(0, 0, 0, 0.4);
+  animation: alertSlideIn 0.3s ease-out, alertPulse 2s ease-in-out infinite;
+  pointer-events: all;
+}
+
+@keyframes alertSlideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes alertPulse {
+  0%, 100% {
+    box-shadow: 0 8px 24px rgba(239, 68, 68, 0.3), 0 4px 8px rgba(0, 0, 0, 0.4);
+  }
+  50% {
+    box-shadow: 0 8px 24px rgba(239, 68, 68, 0.5), 0 4px 8px rgba(0, 0, 0, 0.4);
+  }
+}
+
+.fraud-alert-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: rgba(239, 68, 68, 0.2);
+  border-radius: 8px;
+  color: #fca5a5;
+  flex-shrink: 0;
+}
+
+.fraud-alert-content {
+  flex: 1;
+}
+
+.fraud-alert-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #fecaca;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.fraud-alert-detail {
+  font-size: 0.8125rem;
+  color: #fca5a5;
+  margin-top: 0.125rem;
+}
+
+.fraud-alert-dismiss {
+  background: none;
+  border: none;
+  color: #fca5a5;
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background 0.2s, color 0.2s;
+  flex-shrink: 0;
+}
+
+.fraud-alert-dismiss:hover {
+  background: rgba(239, 68, 68, 0.3);
+  color: white;
+}
+
+@media (max-width: 768px) {
+  .fraud-alert-container {
+    left: 1rem;
+    right: 1rem;
+  }
+
+  .fraud-alert-toast {
+    min-width: auto;
+    max-width: 100%;
+  }
+}

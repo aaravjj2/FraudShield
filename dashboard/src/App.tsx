@@ -1,16 +1,30 @@
+import { useState, useCallback } from 'react';
 import { StatsBar } from './components/StatsBar';
 import { TransactionFeed } from './components/TransactionFeed';
 import { TestForm } from './components/TestForm';
-import { PredictResponse } from './types';
+import { FraudAlert } from './components/FraudAlert';
+import { Transaction, PredictResponse } from './types';
 import './App.css';
 
-function App() {
-  const handlePredictionSubmit = (_response: PredictResponse) => {
+interface AppProps {
+  onPredictionSubmit?: (_response: PredictResponse) => void;
+}
+
+function App({ onPredictionSubmit }: AppProps) {
+  const [latestTransactions, setLatestTransactions] = useState<Transaction[]>([]);
+
+  const handleTransactionsUpdate = useCallback((txs: Transaction[]) => {
+    setLatestTransactions(txs);
+  }, []);
+
+  const handleSubmit = onPredictionSubmit || ((_response: PredictResponse) => {
     // Transaction feed auto-refreshes via polling
-  };
+  });
 
   return (
     <div className="app-container">
+      <FraudAlert transactions={latestTransactions} />
+
       <header className="app-header">
         <div className="header-left">
           <div className="logo">
@@ -41,10 +55,10 @@ function App() {
 
       <main className="main-content">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          <TransactionFeed />
+          <TransactionFeed onTransactionsUpdate={handleTransactionsUpdate} />
         </div>
 
-        <TestForm onSubmit={handlePredictionSubmit} />
+        <TestForm onSubmit={handleSubmit} />
       </main>
 
       <footer className="app-footer">

@@ -6,9 +6,10 @@ import './TransactionFeed.css';
 
 interface TransactionFeedProps {
   className?: string;
+  onTransactionsUpdate?: (_transactions: Transaction[]) => void;
 }
 
-export function TransactionFeed({ className = '' }: TransactionFeedProps) {
+export function TransactionFeed({ className = '', onTransactionsUpdate }: TransactionFeedProps) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,6 +23,7 @@ export function TransactionFeed({ className = '' }: TransactionFeedProps) {
       setError(null);
       const data = await api.getTransactions(50, 0);
       setTransactions(data);
+      onTransactionsUpdate?.(data);
       setLoading(false);
     } catch (err) {
       setError('Failed to fetch transactions');

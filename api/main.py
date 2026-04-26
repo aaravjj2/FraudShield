@@ -24,7 +24,7 @@ from api.schemas import (
     ExplainResponse, ModelInfoResponse,
 )
 from api.database import init_db, insert_transaction, get_transactions, get_transaction, get_stats
-from api.middleware import TimingMiddleware
+from api.middleware import TimingMiddleware, RateLimitMiddleware
 from fastapi.responses import JSONResponse
 
 # Lifespan: init DB on startup
@@ -58,6 +58,7 @@ curl -X POST /predict \\
     license_info={"name": "MIT"},
 )
 
+app.add_middleware(RateLimitMiddleware, max_requests=60, window_seconds=60)
 app.add_middleware(TimingMiddleware)
 
 app.add_middleware(
