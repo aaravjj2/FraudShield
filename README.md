@@ -6,7 +6,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688)](https://fastapi.tiangolo.com)
 [![XGBoost](https://img.shields.io/badge/XGBoost-3.2-orange)](https://xgboost.readthedocs.io)
 [![React](https://img.shields.io/badge/React-18-61DAFB)](https://react.dev)
-[![Tests](https://img.shields.io/badge/Tests-18%2F18-brightgreen)]()
+[![Tests](https://img.shields.io/badge/Tests-35%2F35-brightgreen)]()
 [![F1](https://img.shields.io/badge/F1-0.8526-brightgreen)]()
 [![AUC--ROC](https://img.shields.io/badge/AUC--ROC-0.9772-brightgreen)]()
 
@@ -55,14 +55,18 @@ Open http://localhost:5173 for the dashboard, http://localhost:8000/docs for Swa
 
 | Method | Endpoint | Description | Latency |
 |--------|----------|-------------|---------|
-| `POST` | `/predict` | Score a transaction | < 10ms* |
-| `POST` | `/batch` | Score 1-100 transactions | < 50ms |
-| `GET` | `/explain/{id}` | SHAP explanation for a transaction | ~15ms |
+| `POST` | `/predict` | Score a transaction | ~30ms* |
+| `POST` | `/batch` | Score 1-100 transactions | ~26ms/tx |
+| `GET` | `/explain/{id}` | SHAP explanation for a transaction | ~14ms |
 | `GET` | `/transactions` | Recent transactions | < 5ms |
 | `GET` | `/stats` | Detection statistics | < 5ms |
-| `GET` | `/health` | Health check | < 1ms |
+| `GET` | `/health` | Health check | < 3ms |
+| `POST` | `/simulate` | Generate demo transactions (guarantees fraud) | ~300ms |
+| `GET` | `/model-info` | Model hyperparameters and metrics | < 5ms |
+| `GET` | `/export` | Export transactions as CSV | < 10ms |
+| `GET` | `/metrics` | Prometheus-compatible monitoring | < 5ms |
 
-\* Model inference only: 0.03ms. Full request latency varies by environment.
+\* WSL2 benchmarks: avg=30ms, p50=28ms. Model inference only: 0.03ms. Native Linux <10ms.
 
 ### Example: Detect Fraud
 
@@ -105,7 +109,7 @@ Returns top 5 contributing features with SHAP values — compliant with **EU AI 
 | F1 (fraud class) | **0.8526** | > 0.85 |
 | AUC-ROC | **0.9772** | > 0.95 |
 | Inference (model only) | **0.03ms** | < 5ms |
-| SHAP explanation | **15ms** | < 100ms |
+| SHAP explanation | **14ms** | < 100ms |
 | Dataset | Kaggle Credit Card Fraud (284,807 rows, 492 fraud) | |
 | Class ratio | 578:1 (imbalanced) | |
 | Decision threshold | 0.76 (tuned for F1) | |
@@ -125,9 +129,12 @@ Returns top 5 contributing features with SHAP values — compliant with **EU AI 
 - **Live transaction feed** — 2s polling with unmistakable fraud indicators
 - **Fraud rows**: Red background + warning triangle icon (not color alone)
 - **Legit rows**: Green tint + checkmark icon
+- **Fraud alerts**: Real-time toast notifications when fraud is detected
 - **SHAP waterfall** — click any transaction for explainability drawer
-- **Stats bar** — total transactions, fraud rate, model F1, AUC-ROC
-- **Test form** — submit custom transactions to test the model
+- **Risk gauge** — visual probability bar with color gradient
+- **Stats bar** — total transactions, fraud rate, model F1, AUC-ROC with icons
+- **Test form** — submit custom transactions or simulate demo data
+- **Search & filter** — find transactions by amount or fraud/legit status
 - **Dark fintech theme** — professional operations tool aesthetic
 
 ---
@@ -137,10 +144,10 @@ Returns top 5 contributing features with SHAP values — compliant with **EU AI 
 | Layer | Technology |
 |-------|-----------|
 | ML | Python, XGBoost, SHAP, scikit-learn, pandas |
-| API | FastAPI, Pydantic, Uvicorn, SQLite |
+| API | FastAPI, Pydantic, Uvicorn, SQLite, Rate Limiting |
 | Frontend | React 18, TypeScript, Vite |
 | Deploy | Docker Compose, nginx |
-| Testing | pytest (13), Playwright (5) |
+| Testing | pytest (35), Playwright (5) |
 
 ---
 
@@ -157,9 +164,11 @@ Returns top 5 contributing features with SHAP values — compliant with **EU AI 
 ├── dashboard/            # React frontend
 │   └── src/             # Components, API client
 ├── tests/                # Test suites
-│   ├── test_api.py      # 7 API tests
-│   ├── test_ml.py       # 6 ML tests
-│   └── dashboard/       # 5 Playwright E2E tests
+│   ├── test_api.py      # API endpoint tests
+│   ├── test_ml.py       # ML model tests
+│   ├── test_extended.py # Simulate, explain, edge cases
+│   ├── test_latency.py  # Latency benchmarks
+│   └── dashboard/       # Playwright E2E tests
 ├── docker-compose.yml   # Full stack deployment
 └── requirements.txt     # Python dependencies
 ```
