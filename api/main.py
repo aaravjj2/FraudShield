@@ -6,6 +6,8 @@ Endpoints: POST /predict, POST /batch, GET /transactions, GET /stats, GET /healt
 Swagger: /docs
 """
 
+import csv
+import io
 import json
 import sys
 import time
@@ -25,7 +27,7 @@ from api.schemas import (
 )
 from api.database import init_db, insert_transaction, get_transactions, get_transaction, get_stats
 from api.middleware import TimingMiddleware, RateLimitMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 
 # Lifespan: init DB on startup
 @asynccontextmanager
@@ -233,6 +235,28 @@ async def model_info():
         training_samples=227845,
         n_features=29,
         trained_at=meta.get("trained_at", "unknown"),
+    )
+
+
+@app.get("/export")
+async def export_transactions(
+    limit: int = Query(default=1000, ge=1, le=10000),
+):
+    """Export transactions as CSV for analyst workflow."""
+    rows = get_transactions(limit=limit)
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["id", "amount", "fraud_probability", "is_fraud", "latency_ms", "created_at"])
+    for r in rows:
+        writer.writerow([
+            r["id"], r["amount"], r["fraud_probability"],
+            bool(r["is_fraud"]), r["latency_ms"], r["created_at"],
+        ])
+    output.seek(0)
+    return StreamingResponse(
+        output,
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": "attachment; filename=fraudshield_transactions.csv"},
     )
 
 

@@ -109,3 +109,38 @@ def test_stats():
     assert data["total_transactions"] >= 0
     assert data["model_f1"] > 0.8
     assert data["model_auc_roc"] > 0.9
+
+
+def test_rate_limiting():
+    """Test rate limiting returns 429 after exceeding limit."""
+    from api.middleware import RateLimitMiddleware
+    # Create a new app with low limit for testing
+    from fastapi import FastAPI
+    test_app = FastAPI()
+
+    @test_app.get("/test")
+    async def test_endpoint():
+        return {"ok": True}
+
+    test_app.add_middleware(RateLimitMiddleware, max_requests=3, window_seconds=60)
+
+    test_client = TestClient(test_app)
+    for _ in range(3):
+        r = test_client.get("/test")
+        assert r.status_code == 200
+
+    r = test_client.get("/test")
+    assert r.status_code == 429
+    assert "Retry-After" in r.headers
+
+
+def test_export_csv():
+    """Test CSV export endpoint."""
+    client.post("/predict", json={"amount": 100, "features": [0.0]*28})
+    r = client.get("/export")
+    assert r.status_code == 200
+    assert r.headers["content-type"] == "text/csv; charset=utf-8"
+    lines = r.text.strip().split("\n")
+    assert len(lines) >= 2  # header + at least 1 row
+    assert "id" in lines[0]
+    assert "amount" in lines[0]
