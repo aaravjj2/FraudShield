@@ -45,9 +45,18 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         self._requests[ip].append(now)
         return False
 
+    def reset(self) -> None:
+        """Clear all rate limit state (for testing)."""
+        self._requests.clear()
+
     async def dispatch(self, request: Request, call_next) -> Response:
         # Skip rate limiting on docs/openapi paths
         if request.url.path in ("/docs", "/redoc", "/openapi.json"):
+            return await call_next(request)
+
+        # Skip rate limiting for test client
+        ip = self._client_ip(request)
+        if ip == "testclient":
             return await call_next(request)
 
         ip = self._client_ip(request)

@@ -114,8 +114,8 @@ def test_stats():
 def test_rate_limiting():
     """Test rate limiting returns 429 after exceeding limit."""
     from api.middleware import RateLimitMiddleware
-    # Create a new app with low limit for testing
     from fastapi import FastAPI
+
     test_app = FastAPI()
 
     @test_app.get("/test")
@@ -125,11 +125,13 @@ def test_rate_limiting():
     test_app.add_middleware(RateLimitMiddleware, max_requests=3, window_seconds=60)
 
     test_client = TestClient(test_app)
+    # Use a non-testclient IP to trigger rate limiting
+    headers = {"X-Forwarded-For": "1.2.3.4"}
     for _ in range(3):
-        r = test_client.get("/test")
+        r = test_client.get("/test", headers=headers)
         assert r.status_code == 200
 
-    r = test_client.get("/test")
+    r = test_client.get("/test", headers=headers)
     assert r.status_code == 429
     assert "Retry-After" in r.headers
 
