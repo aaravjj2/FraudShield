@@ -65,3 +65,11 @@ class StatsResponse(BaseModel):
 class HealthResponse(BaseModel):
     status: str
     model_loaded: bool
+
+
+class ExplainResponse(BaseModel):
+    transaction_id: int
+    fraud_probability: float
+    is_fraud: bool
+    top_features: list[SHAPFeature]
+    latency_ms: float

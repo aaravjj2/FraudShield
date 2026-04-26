@@ -49,3 +49,14 @@ export interface HealthResponse {
   status: string;
   model_loaded: boolean;
 }
+
+export interface ExplainResponse {
+  transaction_id: number;
+  fraud_probability: number;
+  is_fraud: boolean;
+  top_features: Array<{
+    feature: string;
+    shap_value: number;
+  }>;
+  latency_ms: number;
+}

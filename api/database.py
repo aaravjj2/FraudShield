@@ -3,7 +3,6 @@
 import sqlite3
 import json
 from pathlib import Path
-from typing import Optional
 
 DB_PATH = Path("data/fraudshield.db")
 
@@ -24,9 +23,10 @@ def init_db() -> None:
         CREATE TABLE IF NOT EXISTS transactions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             amount REAL NOT NULL,
+            features TEXT NOT NULL DEFAULT '[]',
             fraud_probability REAL NOT NULL,
             is_fraud INTEGER NOT NULL,
-            top_features TEXT NOT NULL,
+            top_features TEXT NOT NULL DEFAULT '[]',
             latency_ms REAL NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
@@ -39,20 +39,38 @@ def insert_transaction(
     amount: float,
     fraud_probability: float,
     is_fraud: bool,
-    top_features: list[dict],
     latency_ms: float,
+    features: list[float] | None = None,
+    top_features: list[dict] | None = None,
 ) -> int:
     """Insert a transaction and return its ID."""
     conn = get_connection()
     cursor = conn.execute(
-        """INSERT INTO transactions (amount, fraud_probability, is_fraud, top_features, latency_ms)
-           VALUES (?, ?, ?, ?, ?)""",
-        (amount, fraud_probability, int(is_fraud), json.dumps(top_features), latency_ms),
+        """INSERT INTO transactions (amount, features, fraud_probability, is_fraud, top_features, latency_ms)
+           VALUES (?, ?, ?, ?, ?, ?)""",
+        (
+            amount,
+            json.dumps(features or []),
+            fraud_probability,
+            int(is_fraud),
+            json.dumps(top_features or []),
+            latency_ms,
+        ),
     )
     tx_id = cursor.lastrowid
     conn.commit()
     conn.close()
     return tx_id
+
+
+def get_transaction(tx_id: int) -> dict | None:
+    """Get a single transaction by ID."""
+    conn = get_connection()
+    row = conn.execute(
+        "SELECT * FROM transactions WHERE id = ?", (tx_id,)
+    ).fetchone()
+    conn.close()
+    return dict(row) if row else None
 
 
 def get_transactions(limit: int = 50, offset: int = 0) -> list[dict]:

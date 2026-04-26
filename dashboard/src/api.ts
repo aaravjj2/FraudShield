@@ -75,5 +75,15 @@ export const api = {
     }
 
     return response.json();
+  },
+
+  async getExplanation(transactionId: number): Promise<ExplainResponse> {
+    const response = await fetch(`${API_BASE_URL}/explain/${transactionId}`);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
   }
 };

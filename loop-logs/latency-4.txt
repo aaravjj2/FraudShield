@@ -1,0 +1,7 @@
+/predict WITHOUT SHAP (50 calls):
+  Server-side: 55.85ms
+  Client Min:    59.4ms
+  Client Median: 120.6ms
+  Client Mean:   124.0ms
+  Client P95:    172.9ms
+/explain/58: server-side 14.94ms

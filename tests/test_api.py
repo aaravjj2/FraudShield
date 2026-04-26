@@ -40,8 +40,15 @@ def test_predict_fraud():
     data = r.json()
     assert data["is_fraud"] is True
     assert data["fraud_probability"] > 0.5
-    assert len(data["top_features"]) == 5
     assert data["transaction_id"] is not None
+
+    # SHAP via explain endpoint
+    tx_id = data["transaction_id"]
+    r2 = client.get(f"/explain/{tx_id}")
+    assert r2.status_code == 200
+    explanation = r2.json()
+    assert explanation["transaction_id"] == tx_id
+    assert len(explanation["top_features"]) == 5
 
 
 def test_predict_legit():

@@ -13,6 +13,7 @@ export function TransactionFeed({ className = '' }: TransactionFeedProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [loadingShap, setLoadingShap] = useState(false);
 
   const fetchTransactions = useCallback(async () => {
     try {
@@ -33,8 +34,22 @@ export function TransactionFeed({ className = '' }: TransactionFeedProps) {
     return () => clearInterval(interval);
   }, [fetchTransactions]);
 
-  const handleRowClick = (transaction: Transaction) => {
+  const handleRowClick = async (transaction: Transaction) => {
+    setLoadingShap(true);
+    // Show drawer immediately with placeholder
     setSelectedTransaction(transaction);
+    try {
+      const explanation = await api.getExplanation(Number(transaction.id));
+      // Update the transaction with SHAP values
+      setSelectedTransaction({
+        ...transaction,
+        top_features: explanation.top_features,
+      });
+    } catch (err) {
+      console.error('Error fetching SHAP explanation:', err);
+    } finally {
+      setLoadingShap(false);
+    }
   };
 
   const handleCloseDrawer = () => {

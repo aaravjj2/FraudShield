@@ -2,15 +2,17 @@
 FraudShield — FastAPI Application
 Real-Time AI Fraud Detection API
 
-Endpoints: POST /predict, POST /batch, GET /transactions, GET /stats, GET /health
+Endpoints: POST /predict, POST /batch, GET /transactions, GET /stats, GET /health, GET /explain/{id}
 Swagger: /docs
 """
 
+import json
 import sys
+import time
 from pathlib import Path
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 # Ensure project root is in path
@@ -19,8 +21,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from api.schemas import (
     PredictRequest, PredictResponse, BatchRequest, BatchResponse,
     TransactionRecord, StatsResponse, HealthResponse, SHAPFeature,
+    ExplainResponse,
 )
-from api.database import init_db, insert_transaction, get_transactions, get_stats
+from api.database import init_db, insert_transaction, get_transactions, get_transaction, get_stats
 
 # Lifespan: init DB on startup
 @asynccontextmanager
@@ -37,7 +40,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=["http://localhost:5173", "http://localhost:3000", "http://localhost:80"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -49,7 +52,7 @@ async def health():
     """Health check — is the model loaded?"""
     try:
         from ml.inference.predict import get_model_metadata
-        meta = get_model_metadata()
+        get_model_metadata()
         return HealthResponse(status="ok", model_loaded=True)
     except Exception:
         return HealthResponse(status="ok", model_loaded=False)
@@ -57,23 +60,23 @@ async def health():
 
 @app.post("/predict", response_model=PredictResponse)
 async def predict(req: PredictRequest):
-    """Score a single transaction for fraud probability with SHAP explanation."""
-    from ml.inference.predict import predict as ml_predict
+    """Score a single transaction — FAST (no SHAP). Use /explain/{id} for SHAP."""
+    from ml.inference.predict import predict_fast
 
-    result = ml_predict(req.features, req.amount)
+    result = predict_fast(req.features, req.amount)
 
     tx_id = insert_transaction(
         amount=req.amount,
         fraud_probability=result["fraud_probability"],
         is_fraud=result["is_fraud"],
-        top_features=result["top_features"],
         latency_ms=result["latency_ms"],
+        features=req.features,
     )
 
     return PredictResponse(
         fraud_probability=result["fraud_probability"],
         is_fraud=result["is_fraud"],
-        top_features=[SHAPFeature(**f) for f in result["top_features"]],
+        top_features=[],
         latency_ms=result["latency_ms"],
         transaction_id=tx_id,
     )
@@ -82,30 +85,55 @@ async def predict(req: PredictRequest):
 @app.post("/batch", response_model=BatchResponse)
 async def batch_predict(req: BatchRequest):
     """Score multiple transactions (1-100) for fraud."""
-    import time
-    from ml.inference.predict import predict as ml_predict
+    from ml.inference.predict import predict_fast
 
     start = time.perf_counter()
     results = []
     for tx in req.transactions:
-        result = ml_predict(tx.features, tx.amount)
+        result = predict_fast(tx.features, tx.amount)
         tx_id = insert_transaction(
             amount=tx.amount,
             fraud_probability=result["fraud_probability"],
             is_fraud=result["is_fraud"],
-            top_features=result["top_features"],
             latency_ms=result["latency_ms"],
+            features=tx.features,
         )
         results.append(PredictResponse(
             fraud_probability=result["fraud_probability"],
             is_fraud=result["is_fraud"],
-            top_features=[SHAPFeature(**f) for f in result["top_features"]],
+            top_features=[],
             latency_ms=result["latency_ms"],
             transaction_id=tx_id,
         ))
     total_ms = (time.perf_counter() - start) * 1000
 
     return BatchResponse(results=results, total_latency_ms=round(total_ms, 2))
+
+
+@app.get("/explain/{tx_id}", response_model=ExplainResponse)
+async def explain(tx_id: int):
+    """Get SHAP explanation for a stored transaction."""
+    from ml.inference.predict import explain as ml_explain
+
+    tx = get_transaction(tx_id)
+    if not tx:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+
+    features = json.loads(tx["features"])
+    if len(features) != 28:
+        raise HTTPException(status_code=400, detail="Transaction has no stored features")
+
+    start = time.perf_counter()
+    top_features = ml_explain(features, tx["amount"])
+    shap_ms = (time.perf_counter() - start) * 1000
+
+    return ExplainResponse(
+        transaction_id=tx_id,
+        fraud_probability=tx["fraud_probability"],
+        is_fraud=bool(tx["is_fraud"]),
+        top_features=[SHAPFeature(**f) for f in top_features],
+        latency_ms=round(shap_ms, 2),
+    )
 
 
 @app.get("/transactions", response_model=list[TransactionRecord])
@@ -150,6 +178,5 @@ async def stats():
 
 def json_to_shap(features_json: str) -> list[SHAPFeature]:
     """Parse stored JSON features into SHAPFeature list."""
-    import json
     items = json.loads(features_json)
     return [SHAPFeature(**f) for f in items]
