@@ -180,3 +180,51 @@ def json_to_shap(features_json: str) -> list[SHAPFeature]:
     """Parse stored JSON features into SHAPFeature list."""
     items = json.loads(features_json)
     return [SHAPFeature(**f) for f in items]
+
+
+@app.post("/simulate", response_model=list[PredictResponse])
+async def simulate(
+    count: int = Query(default=10, ge=1, le=50, description="Number of transactions"),
+):
+    """Generate simulated transactions for live demo. Mix of fraud + legit."""
+    import numpy as np
+    from ml.inference.predict import predict_fast
+
+    rng = np.random.default_rng()
+    results = []
+
+    for _ in range(count):
+        # 20% chance of fraud-like features using real fraud patterns
+        is_fraud_sim = rng.random() < 0.20
+
+        if is_fraud_sim:
+            # Based on real fraud patterns from the dataset
+            features = rng.normal(0, 1.5, 28).tolist()
+            features[0] = rng.uniform(-4, -1)   # V1
+            features[3] = rng.uniform(2, 6)     # V4 — strong fraud indicator
+            features[9] = rng.uniform(-5, -2)   # V10
+            features[11] = rng.uniform(-4, -1)  # V12
+            features[13] = rng.uniform(-6, -3)  # V14 — strongest fraud indicator
+            amount = rng.uniform(50, 3000)
+        else:
+            # Normal: centered features, typical amounts
+            features = rng.normal(0, 1, 28).tolist()
+            amount = rng.uniform(1, 500)
+
+        result = predict_fast(features, amount)
+        tx_id = insert_transaction(
+            amount=round(amount, 2),
+            fraud_probability=result["fraud_probability"],
+            is_fraud=result["is_fraud"],
+            latency_ms=result["latency_ms"],
+            features=features,
+        )
+        results.append(PredictResponse(
+            fraud_probability=result["fraud_probability"],
+            is_fraud=result["is_fraud"],
+            top_features=[],
+            latency_ms=result["latency_ms"],
+            transaction_id=tx_id,
+        ))
+
+    return results

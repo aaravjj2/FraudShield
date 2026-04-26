@@ -13,7 +13,7 @@ export function TransactionFeed({ className = '' }: TransactionFeedProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
-  const [loadingShap, setLoadingShap] = useState(false);
+  const [, setLoadingShap] = useState(false);
 
   const fetchTransactions = useCallback(async () => {
     try {

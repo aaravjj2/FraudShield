@@ -3,6 +3,10 @@ import { api } from '../api';
 import { PredictRequest, PredictResponse } from '../types';
 import './TestForm.css';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || window.location.port === '5173'
+  ? 'http://localhost:8000'
+  : '';
+
 interface TestFormProps {
   className?: string;
   onSubmit?: (response: PredictResponse) => void;
@@ -150,6 +154,28 @@ export function TestForm({ className = '', onSubmit }: TestFormProps) {
           aria-busy={loading}
         >
           {loading ? 'Processing...' : 'Submit Prediction'}
+        </button>
+
+        <button
+          type="button"
+          className="submit-btn"
+          style={{
+            background: 'linear-gradient(135deg, var(--accent-purple) 0%, #7c3aed 100%)',
+            marginTop: '0.5rem',
+          }}
+          disabled={loading}
+          onClick={async () => {
+            setLoading(true);
+            try {
+              await fetch(`${API_BASE_URL}/simulate?count=10`, { method: 'POST' });
+            } catch (err) {
+              console.error('Simulation error:', err);
+            } finally {
+              setLoading(false);
+            }
+          }}
+        >
+          {loading ? 'Simulating...' : 'Simulate 10 Transactions'}
         </button>
       </form>
 
